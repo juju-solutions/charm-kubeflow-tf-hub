@@ -7,6 +7,11 @@ from charms.reactive import when, when_not, when_any
 from charms import layer
 
 
+@when('charm.kubeflow-tf-hub.started')
+def charm_ready():
+    layer.status.active('')
+
+
 @when_any('layer.docker-resource.jupyterhub-image.changed',
           'config.change')
 def update_image():
