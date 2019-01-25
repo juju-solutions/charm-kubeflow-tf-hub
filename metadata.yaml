@@ -22,3 +22,4 @@ resources:
     type: oci-image
     description: 'Image used for JupyterHub'
     auto-fetch: true
+    upstream-source: 'gcr.io/kubeflow-images-public/jupyterhub-k8s:1.0.2'
