@@ -22,3 +22,6 @@ resources:
     type: oci-image
     description: 'Image used for JupyterHub'
     auto-fetch: true
+provides:
+  ambassador:
+    interface: kubernetes-annotations

@@ -1,7 +1,7 @@
 from pathlib import Path
 
 from charmhelpers.core import hookenv
-from charms.reactive import set_flag, clear_flag
+from charms.reactive import set_flag, clear_flag, data_changed
 from charms.reactive import when, when_not, when_any
 
 from charms import layer
@@ -10,6 +10,14 @@ from charms import layer
 @when('charm.kubeflow-tf-hub.started')
 def charm_ready():
     layer.status.active('')
+
+
+@when('ambassador.available')
+def charm_ready(annotations):
+    print(annotations)
+    config = hookenv.config()
+    config['kubernetes-service-annotations'] = "a=b c=d"
+    config.save()
 
 
 @when_any('layer.docker-resource.jupyterhub-image.changed',
