@@ -4,8 +4,8 @@ options:
     default: ''
     description: |
       If set, a persistent volume claim will be created for each user
-      notebook with the given capacity.  For example, a value of '10G'
-      will attach 10 gigabytes of storage to each notebook.  This requires
+      notebook with the given capacity. For example, a value of '10G'
+      will attach 10 gigabytes of storage to each notebook. This requires
       a storage class to be defined, and if the 'storage-class' option is
       not set, a storage class to be marked as default.
   notebook-storage-class:
@@ -14,20 +14,13 @@ options:
     description: |
       Storage class name to use instead of the default storage class
       when creating PVCs per the 'notebook-storage-size' option.
-      (This option currently doesn't work.  See issue 1).
-  notebook-image-registry:
+  notebook-image:
     type: string
-    default: 'gcr.io'
+    default: 'gcr.io/kubeflow-images-public/tensorflow-notebook-cpu'
     description: |
-      Image registry for notebook images.
-  notebook-image-repo-name:
-    type: string
-    default: 'kubeflow-images-public'
-    description: |
-      Repo name on the registry which contains the TensorFlow Notebook
-      images.
+      The image to use for the spawned Jupyter Notebook instances.
   authenticator:
     type: string
     default: 'dummy'
     description: |
-      Type of authenticator to use.  Can be either 'dummy' or 'iap'.
+      Type of authenticator to use. Can be either 'dummy' or 'iap'.

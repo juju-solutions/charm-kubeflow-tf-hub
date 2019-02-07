@@ -1,4 +1,5 @@
 from pathlib import Path
+from glob import glob
 
 from charmhelpers.core import hookenv
 from charms.reactive import set_flag, clear_flag
@@ -25,9 +26,6 @@ def start_charm():
 
     config = hookenv.config()
     image_info = layer.docker_resource.get_info('jupyterhub-image')
-    application_name = hookenv.service_name()
-    jh_config_src = Path('files/jupyterhub_config.py')
-    jh_config_dst = Path('/etc/config/jupyterhub_config.py')
 
     layer.caas_base.pod_spec_set({
         'containers': [
@@ -38,10 +36,12 @@ def start_charm():
                     'username': image_info.username,
                     'password': image_info.password,
                 },
+                # TODO: Move to init containers to pip install when juju supports it
                 'command': [
-                    'jupyterhub',
-                    '-f',
-                    str(jh_config_dst),
+                    'bash',
+                    '-c',
+                    f'pip install jupyterhub-kubespawner jhub-remote-user-authenticator oauthenticator'
+                    f' && jupyterhub -f /etc/config/jupyterhub_config.py',
                 ],
                 'ports': [
                     {
@@ -54,25 +54,19 @@ def start_charm():
                     },
                 ],
                 'config': {
-                    # we have to explicitly specify the k8s service name for
-                    # use in the API URL because otherwise JupyterHub uses the
-                    # pod name, which in our case doesn't just happen to match
-                    # the service name; the k8s service name will always be the
-                    # application name with a "juju-" prefix
-                    'K8S_SERVICE_NAME': 'juju-{}'.format(application_name),
+                    'K8S_SERVICE_NAME': hookenv.service_name(),
                     'AUTHENTICATOR': config['authenticator'],
                     'NOTEBOOK_STORAGE_SIZE': config['notebook-storage-size'],
                     'NOTEBOOK_STORAGE_CLASS': config['notebook-storage-class'],
-                    'CLOUD_NAME': '',  # is there a way to detect this?
-                    'REGISTRY': config['notebook-image-registry'],
-                    'REPO_NAME': config['notebook-image-repo-name'],
+                    'NOTEBOOK_IMAGE': config['notebook-image'],
                 },
                 'files': [
                     {
                         'name': 'configs',
-                        'mountPath': str(jh_config_dst.parent),
+                        'mountPath': '/etc/config',
                         'files': {
-                            'jupyterhub_config.py': jh_config_src.read_text(),
+                            Path(filename).name: Path(filename).read_text()
+                            for filename in glob('files/*')
                         },
                     },
                 ],
