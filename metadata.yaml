@@ -1,9 +1,13 @@
-name: kubeflow-tf-hub
-summary: JupyterHub is a multi-user hub of Jupyter notebooks.
+name: kubeflow-jupyterhub
+display-name: JupyterHub
+summary: JupyterHub is a multi-user server for Jupyter notebooks.
 maintainers:
-  - Juju Developers <juju@lists.ubuntu.com>
+  - Cory Johns <cory.johns@canonical.com>
+  - Kenneth Koski <kenneth.koski@canonical.com>
+  - Tim Van Steenburgh <tim.van.steenburgh@canonical.com>
+  - Ian Booth <ian.booth@canonical.com>
 description: |
-  JupyterHub, a multi-user Hub, spawns, manages, and proxies multiple
+  JupyterHub, a multi-user server, spawns, manages, and proxies multiple
   instances of the single-user Jupyter notebook server. JupyterHub can
   be used to serve notebooks to a class of students, a corporate data
   science group, or a scientific research group.
@@ -22,4 +26,4 @@ resources:
     type: oci-image
     description: 'Image used for JupyterHub'
     auto-fetch: true
-    upstream-source: 'gcr.io/kubeflow-images-public/jupyterhub-k8s:1.0.2'
+    upstream-source: 'docker.io/jupyterhub/jupyterhub:0.9.4'
