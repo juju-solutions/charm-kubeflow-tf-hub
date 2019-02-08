@@ -23,5 +23,5 @@ script:
   - juju add-model microk8s-model microk8s-cloud
   - juju create-storage-pool operator-storage kubernetes storage-class=microk8s-hostpath
   - charm build . -o /tmp/build-charm
-  - juju deploy /tmp/charm-builds/kubeflow-* $(<RESOURCES)
+  - juju deploy /tmp/build-charm/builds/kubeflow-* $(<RESOURCES)
   - juju wait -w
