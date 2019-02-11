@@ -27,6 +27,13 @@ def start_charm():
     config = hookenv.config()
     image_info = layer.docker_resource.get_info('jupyterhub-image')
 
+    pip_installs = [
+        'jhub-remote-user-authenticator',
+        'jupyterhub-dummyauthenticator',
+        'jupyterhub-kubespawner',
+        'oauthenticator',
+    ]
+
     layer.caas_base.pod_spec_set({
         'containers': [
             {
@@ -40,8 +47,7 @@ def start_charm():
                 'command': [
                     'bash',
                     '-c',
-                    f'pip install jupyterhub-kubespawner jhub-remote-user-authenticator oauthenticator'
-                    f' && jupyterhub -f /etc/config/jupyterhub_config.py',
+                    f'pip install {" ".join(pip_installs)} && jupyterhub -f /etc/config/jupyterhub_config.py',
                 ],
                 'ports': [
                     {

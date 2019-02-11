@@ -10,7 +10,7 @@ install:
   - sudo snap install lxd
   - sudo snap install jq
   - sudo snap install yq
-  - pip install juju-wait
+  - pip install juju-wait pytest requests
 
 script:
   - sudo sh -c 'echo PATH=/snap/bin:$PATH >> /etc/environment'
@@ -25,3 +25,5 @@ script:
   - charm build . -o /tmp/build-charm
   - juju deploy /tmp/build-charm/builds/kubeflow-* $(<RESOURCES)
   - juju wait -w
+  - microk8s.kubectl port-forward svc/kubeflow-jupyterhub -n microk8s-model 8081:8000 &
+  - pytest
