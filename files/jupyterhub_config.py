@@ -61,4 +61,4 @@ if authenticator == "iap":
 elif authenticator == 'github':
     c.JupyterHub.authenticator_class = 'oauthenticator.github.GitHubOAuthenticator'
 else:
-    c.JupyterHub.authenticator_class = 'jupyterhub.auth.DummyAuthenticator'
+    c.JupyterHub.authenticator_class = 'dummyauthenticator.DummyAuthenticator'
