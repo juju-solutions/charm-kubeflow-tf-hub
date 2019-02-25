@@ -1,6 +1,7 @@
 from pathlib import Path
 from glob import glob
 
+import yaml
 from charmhelpers.core import hookenv
 from charms.reactive import set_flag, clear_flag
 from charms.reactive import when, when_not, when_any
@@ -26,6 +27,10 @@ def start_charm():
 
     config = hookenv.config()
     image_info = layer.docker_resource.get_info('jupyterhub-image')
+    service_name = hookenv.service_name()
+
+    hub_port = 8000
+    api_port = 8081
 
     pip_installs = [
         'jhub-remote-user-authenticator',
@@ -35,6 +40,31 @@ def start_charm():
     ]
 
     layer.caas_base.pod_spec_set({
+        'service': {
+            'annotations': {
+                'getambassador.io/config': yaml.dump_all([
+                    {
+                        'apiVersion': 'ambassador/v0',
+                        'kind':  'Mapping',
+                        'name':  'tf_hub',
+                        'prefix': '/hub/',
+                        'rewrite': '/hub/',
+                        'service': f'{service_name}:{hub_port}',
+                        'use_websocket': True,
+                        'timeout_ms': 30000,
+                    },
+                    {
+                        'apiVersion': 'ambassador/v0',
+                        'kind':  'Mapping',
+                        'name':  'tf_hub_user',
+                        'prefix': '/user/',
+                        'rewrite': '/user/',
+                        'service': f'{service_name}:{hub_port}',
+                        'timeout_ms': 30000,
+                    },
+                ]),
+            },
+        },
         'containers': [
             {
                 'name': 'jupyterhub',
@@ -52,15 +82,15 @@ def start_charm():
                 'ports': [
                     {
                         'name': 'hub',
-                        'containerPort': 8000,
+                        'containerPort': hub_port,
                     },
                     {
                         'name': 'api',
-                        'containerPort': 8081,
+                        'containerPort': api_port,
                     },
                 ],
                 'config': {
-                    'K8S_SERVICE_NAME': hookenv.service_name(),
+                    'K8S_SERVICE_NAME': service_name,
                     'AUTHENTICATOR': config['authenticator'],
                     'NOTEBOOK_STORAGE_SIZE': config['notebook-storage-size'],
                     'NOTEBOOK_STORAGE_CLASS': config['notebook-storage-class'],
