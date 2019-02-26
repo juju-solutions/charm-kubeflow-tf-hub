@@ -7,10 +7,11 @@ install:
   - sudo snap install charm --classic
   - sudo snap install microk8s --classic
   - sudo snap install juju --edge --classic
+  - sudo snap install juju-wait --classic
   - sudo snap install lxd
   - sudo snap install jq
   - sudo snap install yq
-  - pip install juju-wait pytest requests
+  - pip install pytest requests
 
 script:
   - sudo sh -c 'echo PATH=/snap/bin:$PATH >> /etc/environment'
