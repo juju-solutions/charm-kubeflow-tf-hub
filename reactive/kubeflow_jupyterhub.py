@@ -1,6 +1,7 @@
 from pathlib import Path
 from glob import glob
 
+import yaml
 from charmhelpers.core import hookenv
 from charms.reactive import set_flag, clear_flag
 from charms.reactive import when, when_not, when_any
@@ -8,7 +9,7 @@ from charms.reactive import when, when_not, when_any
 from charms import layer
 
 
-@when('charm.kubeflow-tf-hub.started')
+@when('charm.kubeflow-jupyterhub.started')
 def charm_ready():
     layer.status.active('')
 
@@ -16,16 +17,20 @@ def charm_ready():
 @when_any('layer.docker-resource.jupyterhub-image.changed',
           'config.change')
 def update_image():
-    clear_flag('charm.kubeflow-tf-hub.started')
+    clear_flag('charm.kubeflow-jupyterhub.started')
 
 
 @when('layer.docker-resource.jupyterhub-image.available')
-@when_not('charm.kubeflow-tf-hub.started')
+@when_not('charm.kubeflow-jupyterhub.started')
 def start_charm():
     layer.status.maintenance('configuring container')
 
     config = hookenv.config()
     image_info = layer.docker_resource.get_info('jupyterhub-image')
+    service_name = hookenv.service_name()
+
+    hub_port = 8000
+    api_port = 8081
 
     pip_installs = [
         'jhub-remote-user-authenticator',
@@ -35,9 +40,34 @@ def start_charm():
     ]
 
     layer.caas_base.pod_spec_set({
+        'service': {
+            'annotations': {
+                'getambassador.io/config': yaml.dump_all([
+                    {
+                        'apiVersion': 'ambassador/v0',
+                        'kind':  'Mapping',
+                        'name':  'tf_hub',
+                        'prefix': '/hub/',
+                        'rewrite': '/hub/',
+                        'service': f'{service_name}:{hub_port}',
+                        'use_websocket': True,
+                        'timeout_ms': 30000,
+                    },
+                    {
+                        'apiVersion': 'ambassador/v0',
+                        'kind':  'Mapping',
+                        'name':  'tf_hub_user',
+                        'prefix': '/user/',
+                        'rewrite': '/user/',
+                        'service': f'{service_name}:{hub_port}',
+                        'timeout_ms': 30000,
+                    },
+                ]),
+            },
+        },
         'containers': [
             {
-                'name': 'tf-hub',
+                'name': 'jupyterhub',
                 'imageDetails': {
                     'imagePath': image_info.registry_path,
                     'username': image_info.username,
@@ -52,15 +82,15 @@ def start_charm():
                 'ports': [
                     {
                         'name': 'hub',
-                        'containerPort': 8000,
+                        'containerPort': hub_port,
                     },
                     {
                         'name': 'api',
-                        'containerPort': 8081,
+                        'containerPort': api_port,
                     },
                 ],
                 'config': {
-                    'K8S_SERVICE_NAME': hookenv.service_name(),
+                    'K8S_SERVICE_NAME': service_name,
                     'AUTHENTICATOR': config['authenticator'],
                     'NOTEBOOK_STORAGE_SIZE': config['notebook-storage-size'],
                     'NOTEBOOK_STORAGE_CLASS': config['notebook-storage-class'],
@@ -81,4 +111,4 @@ def start_charm():
     })
 
     layer.status.maintenance('creating container')
-    set_flag('charm.kubeflow-tf-hub.started')
+    set_flag('charm.kubeflow-jupyterhub.started')
