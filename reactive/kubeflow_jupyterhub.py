@@ -60,6 +60,7 @@ def start_charm():
                         'prefix': '/user/',
                         'rewrite': '/user/',
                         'service': f'{service_name}:{hub_port}',
+                        'use_websocket': True,
                         'timeout_ms': 30000,
                     },
                 ]),
