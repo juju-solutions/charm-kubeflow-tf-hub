@@ -30,7 +30,7 @@ def test_version():
 
     response = requests.get(f'{URL}/hub/api/')
     response.raise_for_status()
-    assert response.json() == {'version': '0.9.4'}
+    assert response.json() == {'version': '1.0.0.dev'}
 
 
 def test_jupyterhub():
