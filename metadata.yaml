@@ -26,4 +26,4 @@ resources:
     type: oci-image
     description: 'Image used for JupyterHub'
     auto-fetch: true
-    upstream-source: 'docker.io/jupyterhub/jupyterhub:0.9.4'
+    upstream-source: 'docker.io/jupyterhub/jupyterhub:1.0.0.dev'
