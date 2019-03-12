@@ -1,12 +1,23 @@
-from pathlib import Path
 from glob import glob
+from pathlib import Path
 
 import yaml
 from charmhelpers.core import hookenv
-from charms.reactive import set_flag, clear_flag
-from charms.reactive import when, when_not, when_any
-
 from charms import layer
+from charms.reactive import (
+    clear_flag,
+    is_flag_set,
+    register_trigger,
+    set_flag,
+    when,
+    when_any,
+    when_not,
+)
+
+register_trigger(when='endpoint.ambassador.joined',
+                 clear_flag='charm.kubeflow-jupyterhub.started')
+register_trigger(when_not='endpoint.ambassador.joined',
+                 clear_flag='charm.kubeflow-jupyterhub.started')
 
 
 @when('charm.kubeflow-jupyterhub.started')
@@ -32,6 +43,34 @@ def start_charm():
     hub_port = 8000
     api_port = 8081
 
+    if is_flag_set('endpoint.ambassador.joined'):
+        annotations = {
+            'getambassador.io/config': yaml.dump_all([
+                {
+                    'apiVersion': 'ambassador/v0',
+                    'kind':  'Mapping',
+                    'name':  'tf_hub',
+                    'prefix': '/hub/',
+                    'rewrite': '/hub/',
+                    'service': f'{service_name}:{hub_port}',
+                    'use_websocket': True,
+                    'timeout_ms': 30000,
+                },
+                {
+                    'apiVersion': 'ambassador/v0',
+                    'kind':  'Mapping',
+                    'name':  'tf_hub_user',
+                    'prefix': '/user/',
+                    'rewrite': '/user/',
+                    'service': f'{service_name}:{hub_port}',
+                    'use_websocket': True,
+                    'timeout_ms': 30000,
+                },
+            ]),
+        }
+    else:
+        annotations = {}
+
     pip_installs = [
         'jhub-remote-user-authenticator',
         'jupyterhub-dummyauthenticator',
@@ -40,32 +79,7 @@ def start_charm():
     ]
 
     layer.caas_base.pod_spec_set({
-        'service': {
-            'annotations': {
-                'getambassador.io/config': yaml.dump_all([
-                    {
-                        'apiVersion': 'ambassador/v0',
-                        'kind':  'Mapping',
-                        'name':  'tf_hub',
-                        'prefix': '/hub/',
-                        'rewrite': '/hub/',
-                        'service': f'{service_name}:{hub_port}',
-                        'use_websocket': True,
-                        'timeout_ms': 30000,
-                    },
-                    {
-                        'apiVersion': 'ambassador/v0',
-                        'kind':  'Mapping',
-                        'name':  'tf_hub_user',
-                        'prefix': '/user/',
-                        'rewrite': '/user/',
-                        'service': f'{service_name}:{hub_port}',
-                        'use_websocket': True,
-                        'timeout_ms': 30000,
-                    },
-                ]),
-            },
-        },
+        'service': {'annotations': annotations},
         'containers': [
             {
                 'name': 'jupyterhub',
