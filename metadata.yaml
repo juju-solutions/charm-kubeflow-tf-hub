@@ -27,3 +27,6 @@ resources:
     description: 'Image used for JupyterHub'
     auto-fetch: true
     upstream-source: 'docker.io/jupyterhub/jupyterhub:1.0.0.dev'
+requires:
+  ambassador:
+    interface: ambassador
