@@ -2,17 +2,19 @@ dist: xenial
 sudo: required
 language: python
 python: 3.7
+env:
+  - JUJU_CHANNEL=stable
+  - JUJU_CHANNEL=edge
 install:
   - sudo apt purge libyaml-dev lxc* lxd*
   - sudo snap install charm --classic
   - sudo snap install microk8s --classic
-  - sudo snap install juju --edge --classic
+  - sudo snap install juju --classic --channel $JUJU_CHANNEL
   - sudo snap install juju-wait --classic
   - sudo snap install lxd
   - sudo snap install jq
   - sudo snap install yq
   - pip install pytest requests
-
 script:
   - sudo sh -c 'echo PATH=/snap/bin:$PATH >> /etc/environment'
   - yq r metadata.yaml 'resources' -j | jq -r --arg us "upstream-source" 'to_entries|map("--resource \(.key)=\(.value|.[$us])")|join(" ")' > RESOURCES
@@ -20,7 +22,7 @@ script:
   - sudo sh -c 'lxd init --auto'
   - sudo su travis -c 'juju bootstrap localhost'
   - microk8s.enable dns storage dashboard
-  - microk8s.config | juju add-k8s microk8s-cloud
+  - microk8s.config | juju add-k8s -c localhost-localhost microk8s-cloud
   - juju add-model microk8s-model microk8s-cloud
   - juju create-storage-pool operator-storage kubernetes storage-class=microk8s-hostpath
   - charm build . -o /tmp/build-charm
